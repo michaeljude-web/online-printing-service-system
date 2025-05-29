@@ -68,17 +68,18 @@ def create_account_screen():
         rely=0.5, 
         anchor="center", 
         width=320, 
-        height=460
+        height=470
     )
 
     label1 = Label(
         container, 
         text="Hera Online Printing", 
-        font=("Arial", 14, "bold"), 
+        font=("Arial", 15, "bold"), 
         bg="white", 
         fg="black"
     )
-    label1.pack(pady=(20, 5))
+    label1.pack(pady=(18, 5))
+    label1.pack(anchor="center")
 
     label2 = Label(
         container, 
@@ -87,7 +88,8 @@ def create_account_screen():
         bg="white", 
         fg="black"
     )
-    label2.pack(pady=(0, 60))
+    label2.pack(pady=(10, 35))
+    label1.pack(anchor="center")
 
     label3 = Label(
         container, 
@@ -176,7 +178,7 @@ def create_account_screen():
         bg="white", 
         font=("Arial", 9)
     )
-    label_text.pack(side="left")
+    label_text.pack()
 
     login_label = Label(
         center_frame, 
@@ -184,9 +186,9 @@ def create_account_screen():
         fg="blue", 
         bg="white", 
         cursor="hand2", 
-        font=("Arial", 9)
+        font=("Arial", 9,"underline")
     )
-    login_label.pack(side="left")
+    login_label.pack(anchor="center")
 
     login_label.bind(
         "<Button-1>", 

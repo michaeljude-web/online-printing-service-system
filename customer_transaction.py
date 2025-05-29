@@ -3,24 +3,27 @@ from tkinter import ttk, filedialog, messagebox
 import os
 from db_connection import db_connection
 
+
 def open_transaction_popup(customer_id, callback=None):
-    popup = Toplevel()  
+    popup = Toplevel()
     popup.title("Hera Online Printing - New Transaction")
     popup.geometry("500x500")
     popup.configure(bg="#f9f9f9")
-    popup.grab_set() 
+    popup.grab_set()
 
-    form_frame = Frame(popup, bg="white", bd=1, relief="flat", padx=20, pady=20)
+    form_frame = Frame(popup, bg="#faf9f6", bd=1, relief="solid", padx=20, pady=20)
     form_frame.pack(expand=True, fill="none", anchor="center", padx=20, pady=20)
 
     file_path_var = StringVar()
-    total_value = DoubleVar(value=0.00)  
+    total_value = DoubleVar(value=0.00)
 
     def upload_file():
-        filepath = filedialog.askopenfilename(filetypes=[("All Files", "*.*"), ("PDF Files", "*.pdf")])
+        filepath = filedialog.askopenfilename(
+            filetypes=[("All Files", "*.*"), ("PDF Files", "*.pdf")]
+        )
         if filepath:
             file_path_var.set(filepath)
-            file_btn.config(text=os.path.basename(filepath)) 
+            file_btn.config(text=os.path.basename(filepath))
 
     def compute_total(*args):
         try:
@@ -35,7 +38,11 @@ def open_transaction_popup(customer_id, callback=None):
 
         price_table = {
             "bw": {"A4 BOND PAPER": 2, "SHORT BOND PAPER": 1, "LONG BOND PAPER": 3},
-            "colored": {"A4 BOND PAPER": 5, "SHORT BOND PAPER": 3, "LONG BOND PAPER": 5}
+            "colored": {
+                "A4 BOND PAPER": 5,
+                "SHORT BOND PAPER": 3,
+                "LONG BOND PAPER": 5,
+            },
         }
 
         if size in price_table[color]:
@@ -70,17 +77,20 @@ def open_transaction_popup(customer_id, callback=None):
             conn = db_connection()
             cursor = conn.cursor()
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO customer_transaction 
                 (customer_id, file_path, size, copies, print_type, total, status)
                 VALUES (%s, %s, %s, %s, %s, %s, 'pending')
-            """, (customer_id, file, size, copies, color, total)) 
+            """,
+                (customer_id, file, size, copies, color, total),
+            )
 
             conn.commit()
             conn.close()
 
             messagebox.showinfo("Success", "Transaction submitted successfully.")
-            popup.destroy() 
+            popup.destroy()
 
             if callback:
                 callback()
@@ -88,32 +98,80 @@ def open_transaction_popup(customer_id, callback=None):
         except Exception as e:
             messagebox.showerror("Database Error", str(e))
 
-
     label_font = ("Arial", 10)
     input_width = 35
 
-    Label(form_frame, text="File", font=label_font, bg="white", anchor="w").grid(row=0, column=0, sticky="w", pady=(0, 2))
-    file_btn = Button(form_frame, text="Select file", width=input_width, relief="solid", command=upload_file)
+    Label(form_frame, text="File", font=label_font, bg="white", anchor="w").grid(
+        row=0, column=0, sticky="w", pady=(0, 2)
+    )
+
+    file_btn = Button(
+        form_frame,
+        text="Select file",
+        width=input_width,
+        relief="solid",
+        command=upload_file,
+    )
+
     file_btn.grid(row=1, column=0, columnspan=2, pady=5)
 
-    Label(form_frame, text="Paper Size", font=label_font, bg="white", anchor="w").grid(row=2, column=0, sticky="w", pady=(10, 2))
-    size_combo = ttk.Combobox(form_frame, values=["A4 BOND PAPER", "SHORT BOND PAPER", "LONG BOND PAPER"], state="readonly", width=input_width - 2)
+    Label(form_frame, text="Paper Size", font=label_font, bg="white", anchor="w").grid(
+        row=2, column=0, sticky="w", pady=(10, 2)
+    )
+    size_combo = ttk.Combobox(
+        form_frame,
+        values=["A4 BOND PAPER", "SHORT BOND PAPER", "LONG BOND PAPER"],
+        state="readonly",
+        width=input_width - 2,
+    )
     size_combo.set("Select size")
     size_combo.grid(row=3, column=0, columnspan=2, pady=5)
     size_combo.bind("<<ComboboxSelected>>", compute_total)
 
-    Label(form_frame, text="Number of Copies", font=label_font, bg="white", anchor="w").grid(row=4, column=0, sticky="w", pady=(10, 2))
+    Label(
+        form_frame, text="Number of Copies", font=label_font, bg="white", anchor="w"
+    ).grid(row=4, column=0, sticky="w", pady=(10, 2))
     copies_entry = Entry(form_frame, width=input_width, relief="solid")
     copies_entry.grid(row=5, column=0, columnspan=2, pady=5)
     copies_entry.bind("<KeyRelease>", compute_total)
 
-    Label(form_frame, text="Color Type", font=label_font, bg="white", anchor="w").grid(row=6, column=0, sticky="w", pady=(10, 2))
+    Label(form_frame, text="Color Type", font=label_font, bg="white", anchor="w").grid(
+        row=6, column=0, sticky="w", pady=(10, 2)
+    )
     color_type = StringVar(value="bw")
-    Radiobutton(form_frame, text="Black & White", variable=color_type, value="bw", bg="white", command=compute_total).grid(row=7, column=0, sticky="w", pady=2)
-    Radiobutton(form_frame, text="Colored", variable=color_type, value="colored", bg="white", command=compute_total).grid(row=7, column=1, sticky="w", pady=2)
+    Radiobutton(
+        form_frame,
+        text="Black & White",
+        variable=color_type,
+        value="bw",
+        bg="white",
+        command=compute_total,
+    ).grid(row=7, column=0, sticky="w", pady=2)
+    Radiobutton(
+        form_frame,
+        text="Colored",
+        variable=color_type,
+        value="colored",
+        bg="white",
+        command=compute_total,
+    ).grid(row=7, column=1, sticky="w", pady=2)
 
-    total_label = Label(form_frame, text="Total: ₱0.00", font=("Arial", 12, "bold"), bg="white", fg="#123285")
+    total_label = Label(
+        form_frame,
+        text="Total: ₱0.00",
+        font=("Arial", 12, "bold"),
+        bg="white",
+        fg="#123285",
+    )
     total_label.grid(row=8, column=0, columnspan=2, pady=15)
 
-    send_btn = Button(form_frame, text="Send", width=input_width, bg="#123285", fg="white", relief="flat", command=submit_transaction)
+    send_btn = Button(
+        form_frame,
+        text="Send",
+        width=input_width,
+        bg="#123285",
+        fg="white",
+        relief="flat",
+        command=submit_transaction,
+    )
     send_btn.grid(row=9, column=0, columnspan=2, pady=10)

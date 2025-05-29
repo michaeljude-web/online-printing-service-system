@@ -127,8 +127,8 @@ window.configure(bg="#f5f5f5")
 create_sidebar(window, load)
 topbar(window)
 
-content = Frame(window, bg="#f5f5f5")
-content.pack(expand=True, fill="both")
+content = Frame(window)
+content.pack(expand=True, fill="both", padx=(17, 17))
 
 load("Dashboard")
 
