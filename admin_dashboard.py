@@ -1,36 +1,151 @@
-from tkinter import *
+import mysql.connector
+from tkinter import Frame, Label, messagebox
+from db_connection import db_connection
+
+
+def get_pending_completed_counts():
+    connection = db_connection()
+    if connection is None:
+        return 0, 0
+
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(
+            "SELECT COUNT(*) FROM customer_transaction WHERE status = 'pending'"
+        )
+        pending_count = cursor.fetchone()[0]
+        cursor.execute(
+            "SELECT COUNT(*) FROM customer_transaction WHERE status = 'completed'"
+        )
+        completed_count = cursor.fetchone()[0]
+    except mysql.connector.Error as err:
+        messagebox.showerror(
+            "Database Error", f"Error fetching transaction counts: {err}"
+        )
+        pending_count, completed_count = 0, 0
+    finally:
+        cursor.close()
+        connection.close()
+
+    return pending_count, completed_count
+
+
+def get_inventory_totals():
+    connection = db_connection()
+    if connection is None:
+        return 0, 0, 0
+
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(
+            "SELECT quantity FROM inventory WHERE item_name = 'Short Bond Paper'"
+        )
+        short_bond_result = cursor.fetchone()
+        short_bond_quantity = short_bond_result[0] if short_bond_result else 0
+
+        cursor.execute(
+            "SELECT quantity FROM inventory WHERE item_name = 'Long Bond Paper'"
+        )
+        long_bond_result = cursor.fetchone()
+        long_bond_quantity = long_bond_result[0] if long_bond_result else 0
+
+        cursor.execute(
+            "SELECT quantity FROM inventory WHERE item_name = 'A4 Bond Paper'"
+        )
+        a4_bond_result = cursor.fetchone()
+        a4_bond_quantity = a4_bond_result[0] if a4_bond_result else 0
+
+    except mysql.connector.Error as err:
+        messagebox.showerror("Database Error", f"Error fetching inventory data: {err}")
+        short_bond_quantity, long_bond_quantity, a4_bond_quantity = 0, 0, 0
+    finally:
+        cursor.close()
+        connection.close()
+
+    return short_bond_quantity, long_bond_quantity, a4_bond_quantity
+
 
 def dashboard(parent):
     for widget in parent.winfo_children():
         widget.destroy()
 
-    container = Frame(parent, bg="#f5f5f5")
+    container = Frame(parent, bg="white")
     container.pack(expand=True, fill="both", padx=20, pady=20)
 
-    #--------------------------------------#
-    left_frame = Frame(container, bg="#1e3a8a", width=200, bd=0)
-    left_frame.pack(side="left", fill="y", padx=(0, 20))
-    left_frame.pack_propagate(False)
+    left_frame = Frame(container, bg="white")
+    left_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
-    Label(left_frame, text="NEXT", bg="#1e3a8a", fg="white", font=("Arial", 10, "bold")).pack(pady=(10, 10))
+    right_frame = Frame(container, bg="white")
+    right_frame.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
 
-    for _ in range(8):
-        Label(left_frame, bg="white", height=2).pack(pady=5, padx=10, fill="x")
+    container.grid_columnconfigure(0, weight=1)
+    container.grid_columnconfigure(1, weight=1)
+    container.grid_rowconfigure(0, weight=1)
 
-    #--------------------------------------#
-    right_frame = Frame(container, bg="#f5f5f5")
-    right_frame.pack(side="left", fill="both", expand=True)
+    left_frame.grid_rowconfigure(0, weight=3)
+    right_frame.grid_rowconfigure(0, weight=3)
 
-    stats = [("PENDING", 0), ("COMPLETED", 0)]
-    for i, (label, count) in enumerate(stats):
-        box = Frame(right_frame, bg="white", highlightbackground="#1e3a8a", highlightthickness=1)
-        box.grid(row=i//1, column=i%1, sticky="nsew", pady=10)
+    pending_count, completed_count = get_pending_completed_counts()
+
+    short_bond_qty, long_bond_qty, a4_bond_qty = get_inventory_totals()
+    inventory_stats = [
+        ("Short Bond Paper", short_bond_qty),
+        ("Long Bond Paper", long_bond_qty),
+        ("A4 Bond Paper", a4_bond_qty),
+    ]
+
+    for i, (label, quantity) in enumerate(inventory_stats):
+        box = Frame(left_frame, bg="#1e3a8a", bd=1, relief="solid")
+        box.grid(row=i, column=0, padx=10, pady=15, sticky="nsew")
         box.grid_propagate(False)
-        box.configure(width=150, height=100)
 
-        Label(box, text=label, bg="white", fg="black", font=("Arial", 10, "bold")).pack(pady=(10, 0))
-        Label(box, text=str(count), bg="white", fg="black", font=("Arial", 16, "bold")).pack()
+        Label(
+            box,
+            text=label,
+            bg="#1e3a8a",
+            fg="white",
+            font=("Arial", 10, "bold"),
+            anchor="center",
+        ).pack(pady=(10, 0), expand=True)
+        Label(
+            box,
+            text=str(quantity),
+            bg="#1e3a8a",
+            fg="white",
+            font=("Arial", 16, "bold"),
+            anchor="center",
+        ).pack(pady=(5, 10), expand=True)
+
+    stats = [("PENDING", pending_count), ("COMPLETED", completed_count)]
+
+    for i, (label, count) in enumerate(stats):
+        box = Frame(right_frame, bg="#34D399", bd=1, relief="solid")
+        box.grid(row=i, column=0, padx=10, pady=10, sticky="nsew")
+        box.grid_propagate(False)
+        box.configure(height=150)
+
+        Label(
+            box,
+            text=label,
+            bg="#34D399",
+            fg="white",
+            font=("Arial", 10, "bold"),
+            anchor="center",
+        ).pack(pady=(10, 0), expand=True)
+        Label(
+            box,
+            text=str(count),
+            bg="#34D399",
+            fg="white",
+            font=("Arial", 16, "bold"),
+            anchor="center",
+        ).pack(pady=(5, 10), expand=True)
 
     right_frame.grid_rowconfigure(0, weight=1)
     right_frame.grid_rowconfigure(1, weight=1)
     right_frame.grid_columnconfigure(0, weight=1)
+    left_frame.grid_rowconfigure(0, weight=1)
+    left_frame.grid_rowconfigure(1, weight=1)
+    left_frame.grid_columnconfigure(0, weight=1)

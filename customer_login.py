@@ -135,4 +135,9 @@ def login_screen():
     window.mainloop()
 
 
-login_screen()
+def open_login_window():
+    login_screen()
+
+
+if __name__ == "__main__":
+    open_login_window()

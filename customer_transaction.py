@@ -101,7 +101,7 @@ def open_transaction_popup(customer_id, callback=None):
     label_font = ("Arial", 10)
     input_width = 35
 
-    Label(form_frame, text="File", font=label_font, bg="white", anchor="w").grid(
+    Label(form_frame, text="File", font=label_font, bg="#faf9f6", anchor="w").grid(
         row=0, column=0, sticky="w", pady=(0, 2)
     )
 
@@ -115,7 +115,7 @@ def open_transaction_popup(customer_id, callback=None):
 
     file_btn.grid(row=1, column=0, columnspan=2, pady=5)
 
-    Label(form_frame, text="Paper Size", font=label_font, bg="white", anchor="w").grid(
+    Label(form_frame, text="Paper Size", font=label_font, bg="#faf9f6", anchor="w").grid(
         row=2, column=0, sticky="w", pady=(10, 2)
     )
     size_combo = ttk.Combobox(
@@ -129,13 +129,13 @@ def open_transaction_popup(customer_id, callback=None):
     size_combo.bind("<<ComboboxSelected>>", compute_total)
 
     Label(
-        form_frame, text="Number of Copies", font=label_font, bg="white", anchor="w"
+        form_frame, text="Number of Copies", font=label_font, bg="#faf9f6", anchor="w"
     ).grid(row=4, column=0, sticky="w", pady=(10, 2))
     copies_entry = Entry(form_frame, width=input_width, relief="solid")
     copies_entry.grid(row=5, column=0, columnspan=2, pady=5)
     copies_entry.bind("<KeyRelease>", compute_total)
 
-    Label(form_frame, text="Color Type", font=label_font, bg="white", anchor="w").grid(
+    Label(form_frame, text="Color Type", font=label_font, bg="#faf9f6", anchor="w").grid(
         row=6, column=0, sticky="w", pady=(10, 2)
     )
     color_type = StringVar(value="bw")
@@ -144,7 +144,7 @@ def open_transaction_popup(customer_id, callback=None):
         text="Black & White",
         variable=color_type,
         value="bw",
-        bg="white",
+        bg="#faf9f6",
         command=compute_total,
     ).grid(row=7, column=0, sticky="w", pady=2)
     Radiobutton(
@@ -152,7 +152,7 @@ def open_transaction_popup(customer_id, callback=None):
         text="Colored",
         variable=color_type,
         value="colored",
-        bg="white",
+        bg="#faf9f6",
         command=compute_total,
     ).grid(row=7, column=1, sticky="w", pady=2)
 
@@ -160,7 +160,7 @@ def open_transaction_popup(customer_id, callback=None):
         form_frame,
         text="Total: ₱0.00",
         font=("Arial", 12, "bold"),
-        bg="white",
+        bg="#faf9f6",
         fg="#123285",
     )
     total_label.grid(row=8, column=0, columnspan=2, pady=15)

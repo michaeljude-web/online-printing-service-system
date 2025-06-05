@@ -1,8 +1,9 @@
 from tkinter import *
 from tkinter import messagebox
-from db_connection import db_connection  
-import os  
-import shutil  
+from db_connection import db_connection
+import os
+import shutil
+from datetime import datetime
 
 def transaction(parent):
     for widget in parent.winfo_children():
@@ -22,30 +23,34 @@ def transaction(parent):
 
         conn = db_connection()
         cursor = conn.cursor()
-
         cursor.execute("""
-            SELECT t.transaction_id, t.customer_id, c.full_name
+            SELECT t.transaction_id, t.customer_id, c.full_name, t.status, t.transaction_date
             FROM customer_transaction t
             JOIN customer c ON t.customer_id = c.customer_id
-            WHERE t.status = 'pending'
+            WHERE t.status IN ('pending', 'read')
+            ORDER BY t.transaction_date DESC
         """)
         transactions = cursor.fetchall()
+        conn.close()
 
         if not transactions:
-            Label(parent, text="No pending transactions", bg="white", fg="black").pack(anchor="w", padx=20, pady=20)
+            Label(parent, text="No transactions found", bg="white", fg="black").pack(anchor="w", padx=20, pady=20)
         else:
             for txn in transactions:
-                txn_id, customer_id, full_name = txn
+                txn_id, customer_id, full_name, status, transaction_date = txn
+                date_obj = datetime.strptime(transaction_date, "%Y-%m-%d %H:%M:%S") if isinstance(transaction_date, str) else transaction_date
+                formatted_date = date_obj.strftime("%b %d %Y %I:%M %p").upper()
 
-                name_label = Label(parent,
-                                   text=full_name,
-                                   font=("Arial", 11),
-                                   fg="black", bg="white",
-                                   cursor="hand2")
-                name_label.pack(anchor="w", padx=30, pady=5)
+                row_frame = Frame(parent, bg="white")
+                row_frame.pack(fill="x", padx=30, pady=5)
+
+                name_label = Label(row_frame, text=full_name, font=("Arial", 11), fg="black", bg="white", cursor="hand2")
+                name_label.pack(side="left")
+
+                date_label = Label(row_frame, text=formatted_date, font=("Arial", 11), fg="black", bg="white")
+                date_label.pack(side="right")
 
                 Frame(parent, height=1, bg="gray").pack(fill="x", padx=30, pady=(0, 5))
-
                 name_label.bind("<Button-1>", lambda e, txn_id=txn_id: open_transaction_details(txn_id))
 
     def open_transaction_details(transaction_id):
@@ -66,84 +71,75 @@ def transaction(parent):
 
         if txn:
             file_path, size, copies, print_type, total, status = txn
-
             filename = os.path.basename(file_path)
-            size = size.upper()
-            copies = f"{copies} COPIES"
-            print_type = print_type.upper()
-            total = f"P{total}"
+            size_upper = size.strip().upper()
+            copies_int = int(copies)
 
             main_frame = Frame(top, bg="white")
             main_frame.pack(expand=True, fill="both", padx=30, pady=30)
 
-            top_row = Frame(main_frame, bg="white")
-            top_row.pack(fill="x")
-
-            Label(top_row, text=filename, bg="white", font=("Arial", 10, "bold")).pack(side="left")
-            right = Frame(top_row, bg="white")
-            right.pack(side="right")
-
-            Label(right, text="Total bill", bg="white", font=("Arial", 8)).pack(anchor="e")
-            Label(right, text=total, bg="white", fg="black", font=("Arial", 12, "bold")).pack(anchor="e")
-
-            Label(main_frame, text=size, bg="white", font=("Arial", 10)).pack(anchor="w", pady=(15, 3))
-            Label(main_frame, text=copies, bg="white", font=("Arial", 10)).pack(anchor="w", pady=3)
-            Label(main_frame, text=print_type, bg="white", font=("Arial", 10)).pack(anchor="w", pady=3)
+            Label(main_frame, text=filename, bg="white", font=("Arial", 10, "bold")).pack(anchor="w")
+            Label(main_frame, text=size_upper, bg="white", font=("Arial", 10)).pack(anchor="w", pady=(10, 0))
+            Label(main_frame, text=f"{copies} COPIES", bg="white", font=("Arial", 10)).pack(anchor="w")
+            Label(main_frame, text=print_type.upper(), bg="white", font=("Arial", 10)).pack(anchor="w", pady=(0, 10))
+            Label(main_frame, text=f"TOTAL: P{total}", bg="white", font=("Arial", 12, "bold"), fg="black").pack(anchor="w", pady=5)
 
             button_frame = Frame(main_frame, bg="white")
             button_frame.pack(pady=20)
 
             def decline_transaction():
-                result = messagebox.askquestion("Decline Transaction", "Are you sure you want to decline this transaction?")
-                if result == 'yes':
-                    try:
-                        conn = db_connection()
-                        cursor = conn.cursor()
-                        cursor.execute("""
-                            UPDATE customer_transaction
-                            SET status = 'declined'
-                            WHERE transaction_id = %s
-                        """, (transaction_id,))
-                        conn.commit()
-                        conn.close()
-
-                        display_transactions(parent)  # <--
-                        messagebox.showinfo("Success", "Transaction has been declined.")
-                    except Exception as e:
-                        messagebox.showerror("Error", f"Error occurred while declining transaction: {e}")
+                if messagebox.askyesno("Decline", "Are you sure you want to decline this transaction?"):
+                    conn = db_connection()
+                    cursor = conn.cursor()
+                    cursor.execute("UPDATE customer_transaction SET status = 'declined' WHERE transaction_id = %s", (transaction_id,))
+                    conn.commit()
+                    conn.close()
+                    display_transactions(parent)
+                    messagebox.showinfo("Declined", "Transaction has been declined.")
 
             def accept_transaction():
-                result = messagebox.askquestion("Complete Transaction", "Are you sure you want to complete this transaction?")
-                if result == 'yes':
-                    try:
-                        conn = db_connection()
-                        cursor = conn.cursor()
-                        cursor.execute("""
-                            UPDATE customer_transaction
-                            SET status = 'completed'
-                            WHERE transaction_id = %s
-                        """, (transaction_id,))
-                        conn.commit()
+                if messagebox.askyesno("Accept", "Are you sure you want to complete this transaction?"):
+                    conn = db_connection()
+                    cursor = conn.cursor()
+
+                    if "BOND PAPER" in size_upper:
+                        inventory_name = size_upper.strip()
+                    else:
+                        inventory_name = f"{size_upper} BOND PAPER".strip()
+
+                    cursor.execute("SELECT quantity FROM inventory WHERE UPPER(TRIM(item_name)) = %s", (inventory_name,))
+                    result = cursor.fetchone()
+
+                    if not result:
                         conn.close()
-#DIRI ----------------------------------------------------------------------------------------------------------#
-                        download_folder = "C:/Users/agard/Documents/Final AppDev/Customer Files"
-                        if not os.path.exists(download_folder): 
-                            os.makedirs(download_folder)  
+                        messagebox.showerror("Inventory Error", f"No inventory record for {inventory_name}.")
+                        return
 
-                        if os.path.exists(file_path):
-                            shutil.copy(file_path, os.path.join(download_folder, filename))  
-                            messagebox.showinfo("Success", f"Transaction has been completed and file is downloaded.")
-                        else:
-                            messagebox.showerror("Error", "File not found for download.")
+                    current_quantity = float(result[0])
+                    if current_quantity < copies_int:
+                        conn.close()
+                        messagebox.showwarning("Insufficient Stock", f"Only {current_quantity} {inventory_name} available.")
+                        return
 
+                    new_quantity = current_quantity - copies_int
+                    cursor.execute("UPDATE inventory SET quantity = %s WHERE UPPER(TRIM(item_name)) = %s", (new_quantity, inventory_name))
+                    cursor.execute("UPDATE customer_transaction SET status = 'completed' WHERE transaction_id = %s", (transaction_id,))
+                    conn.commit()
+                    conn.close()
 
-                        display_transactions(parent)  # <--
-                    except Exception as e:
-                        messagebox.showerror("Error", f"Error occurred while completing transaction: {e}")
+                    download_folder = "C:/Users/agard/Documents/finalAppDev/customer_files"
+                    if not os.path.exists(download_folder):
+                        os.makedirs(download_folder)
 
-            Button(button_frame, text="Decline", bg="darkred", fg="white", width=10, command=decline_transaction).pack(side="left", padx=10)
+                    if os.path.exists(file_path):
+                        shutil.copy(file_path, os.path.join(download_folder, filename))
+                        messagebox.showinfo("Success", "Transaction completed. File downloaded.")
+                    else:
+                        messagebox.showwarning("File Not Found", "Transaction completed but file not found.")
 
-            Button(button_frame, text="Accept", bg="darkblue", fg="white", width=10, command=accept_transaction).pack(side="left", padx=10)
+                    display_transactions(parent)
 
+            Button(button_frame, text="Decline", bg="darkred", fg="white", command=decline_transaction, width=10).pack(side="left", padx=10)
+            Button(button_frame, text="Accept", bg="darkblue", fg="white", command=accept_transaction, width=10).pack(side="left", padx=10)
 
-    display_transactions(parent) 
+    display_transactions(parent)
