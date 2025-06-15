@@ -1,7 +1,16 @@
+import sys, os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from tkinter import *
 from tkinter import messagebox
-from db_connection import db_connection
+from database.db_connection import db_connection
 from PIL import Image, ImageTk
+
+
+def asset(path):
+    return os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "assets", path)
+    )
 
 
 def update_password(customer_id, new_password, old_password):
@@ -50,7 +59,7 @@ def get_full_name(customer_id):
         conn.close()
 
 
-def customer_profile(parent, customer_id):
+def profile(parent, customer_id):
     for widget in parent.winfo_children():
         widget.destroy()
 
@@ -63,7 +72,7 @@ def customer_profile(parent, customer_id):
     form_frame.grid_columnconfigure(0, weight=1)
     form_frame.grid_columnconfigure(1, weight=3)
 
-    user_icon = Image.open("assets/img/profile.png")
+    user_icon = Image.open(asset("img/profile.png"))
     user_icon = user_icon.resize((50, 50))
     user_icon_photo = ImageTk.PhotoImage(user_icon)
 

@@ -1,6 +1,9 @@
+import sys, os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from tkinter import *
 from tkinter import messagebox
-from db_connection import db_connection
+from database.db_connection import db_connection
 
 
 def inventory(parent):

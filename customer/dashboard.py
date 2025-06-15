@@ -1,11 +1,19 @@
+import sys, os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from tkinter import *
 from tkinter import ttk, messagebox
 from PIL import Image, ImageTk, ImageDraw
-from db_connection import db_connection
-import os
-from customer_transaction import open_transaction_popup
-from customer_notification import customer_notification
-from customer_profile import customer_profile
+from database.db_connection import db_connection
+from transaction import transaction_open
+from notification import notification
+from profile import profile
+
+
+def asset(path):
+    return os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "assets", path)
+    )
 
 
 def cancel_transaction(transaction_id, frame_to_remove):
@@ -266,7 +274,7 @@ def initialize_main_window(customer_id):
     global CURRENT_CUSTOMER_ID, notif_btn_widget, icon_images
     CURRENT_CUSTOMER_ID = customer_id
 
-    pages = {"Notification": customer_notification, "Profile": customer_profile}
+    pages = {"Notification": notification, "Profile": profile}
     icon_images = {}
 
     def load_icon(path, size=(20, 20)):
@@ -277,7 +285,7 @@ def initialize_main_window(customer_id):
     def update_notification_icon():
         has_unread = check_unread_notifications(CURRENT_CUSTOMER_ID)
         new_icon = create_notification_icon_with_dot(
-            "assets/img/notification.png", has_unread
+            asset("img/notification.png"), has_unread
         )
         icon_images["notif"] = new_icon
         if "notif_btn_widget" in globals():
@@ -296,9 +304,9 @@ def initialize_main_window(customer_id):
         result = messagebox.askyesno("Logout", "Are you sure you want to logout?")
         if result:
             window.destroy()
-            import customer_login
+            import login
 
-            customer_login.open_login_window()
+            login.open_login_window()
 
     def create_navbar(parent):
         global notif_btn_widget
@@ -318,10 +326,10 @@ def initialize_main_window(customer_id):
 
         has_unread = check_unread_notifications(CURRENT_CUSTOMER_ID)
         notif_icon = create_notification_icon_with_dot(
-            "assets/img/notification.png", has_unread
+            asset("img/notification.png"), has_unread
         )
-        profile_icon = load_icon("assets/img/profile.png")
-        logout_icon = load_icon("assets/img/logout.png")
+        profile_icon = load_icon(asset("img/profile.png"))
+        logout_icon = load_icon(asset("img/logout.png"))
 
         icon_images["notif"] = notif_icon
         icon_images["profile"] = profile_icon
@@ -358,9 +366,7 @@ def initialize_main_window(customer_id):
             width=3,
             height=1,
             cursor="hand2",
-            command=lambda: open_transaction_popup(
-                CURRENT_CUSTOMER_ID, refresh_transactions
-            ),
+            command=lambda: transaction_open(CURRENT_CUSTOMER_ID, refresh_transactions),
         )
         fab.place(relx=0.95, rely=0.95, anchor="se")
 
@@ -382,7 +388,7 @@ def refresh_transactions():
     if "CURRENT_CUSTOMER_ID" in globals():
         has_unread = check_unread_notifications(CURRENT_CUSTOMER_ID)
         new_icon = create_notification_icon_with_dot(
-            "assets/img/notification.png", has_unread
+            asset("img/notification.png"), has_unread
         )
         icon_images["notif"] = new_icon
         if "notif_btn_widget" in globals():

@@ -1,12 +1,15 @@
+import sys, os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from tkinter import *
 from tkinter import messagebox
 import subprocess
-from db_connection import db_connection
-import customer_dashboard
+from database.db_connection import db_connection
+import dashboard
 
 
-def open_customer_dashboard(customer_id):
-    customer_dashboard.initialize_main_window(customer_id)
+def open_dashboard(customer_id):
+    dashboard.initialize_main_window(customer_id)
 
 
 def open_create_account():
@@ -31,7 +34,7 @@ def login(email, password, window):
                     )
                 elif status == "Approved":
                     window.destroy()
-                    open_customer_dashboard(customer_id)
+                    open_dashboard(customer_id)
                 else:
                     messagebox.showerror("Login Failed", f"Account status: {status}")
             else:
@@ -121,10 +124,7 @@ def login_screen():
         fg="#1E3A8A",
         bg="white",
         cursor="hand2",
-        font=(
-            "Arial",
-            9, "underline"
-        ),
+        font=("Arial", 9, "underline"),
     )
     create_account_label.pack(anchor="center")
 

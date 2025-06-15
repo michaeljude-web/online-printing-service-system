@@ -1,6 +1,9 @@
+import sys, os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import mysql.connector
 from tkinter import Frame, Label, messagebox
-from db_connection import db_connection
+from database.db_connection import db_connection
 
 
 def get_pending_completed_counts():

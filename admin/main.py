@@ -1,23 +1,24 @@
+import sys, os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from tkinter import *
+from database.db_connection import db_connection
 from PIL import Image, ImageTk, ImageDraw
 import subprocess
-from db_connection import db_connection
 
-from admin_dashboard import dashboard
-from admin_transaction import transaction
-from admin_customer import customer
-from admin_inventory import inventory
-from admin_notification import notification
-from admin_profile import profile
+from dashboard import dashboard
+from transaction import transaction
+from customer import customer
+from inventory import inventory
+from notification import notification
+from profile import profile
 
-pages = {
-    "Dashboard": dashboard,
-    "Transaction": transaction,
-    "Customer": customer,
-    "Inventory": inventory,
-    "Notification": notification,
-    "Profile": profile,
-}
+
+def asset(path):
+    return os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "assets", path)
+    )
+
 
 icon_images = {}
 
@@ -30,38 +31,44 @@ def load(page):
 
 def logout_user():
     window.destroy()
-    subprocess.Popen(["python", "admin_login.py"])
+    subprocess.Popen(["python", "login.py"])
 
 
 def load_icon(path, size=(16, 16)):
-    img = Image.open(path)
+    img = Image.open(asset(path))
     img = img.resize(size, Image.LANCZOS)
-    icon = ImageTk.PhotoImage(img)
-    return icon
+    return ImageTk.PhotoImage(img)
+
 
 def create_notification_icon_with_dot(icon_path, has_unread=False, size=(16, 16)):
     try:
-        img = Image.open(icon_path)
+        img = Image.open(asset(icon_path))
         img = img.resize(size, Image.Resampling.LANCZOS)
-
         if has_unread:
             img = img.convert("RGBA")
-
             draw = ImageDraw.Draw(img)
-
             dot_size = 6
             x = size[0] - dot_size - 2
             y = 2
             draw.ellipse(
                 [x, y, x + dot_size, y + dot_size], fill="red", outline="darkred"
             )
-
         return ImageTk.PhotoImage(img)
     except Exception as e:
         print(f"Error creating notification icon: {e}")
-        img = Image.open(icon_path)
+        img = Image.open(asset(icon_path))
         img = img.resize(size, Image.Resampling.LANCZOS)
         return ImageTk.PhotoImage(img)
+
+
+pages = {
+    "Dashboard": dashboard,
+    "Transaction": transaction,
+    "Customer": customer,
+    "Inventory": inventory,
+    "Notification": notification,
+    "Profile": profile,
+}
 
 
 def create_sidebar(parent, on_select):
@@ -79,10 +86,10 @@ def create_sidebar(parent, on_select):
     ).pack(pady=(20, 30), fill="x")
 
     menu_sidebar = [
-        ("assets/img/dashboard.png", "Dashboard"),
-        ("assets/img/transaction.png", "Transaction"),
-        ("assets/img/customer.png", "Customer"),
-        ("assets/img/inventory.png", "Inventory"),
+        ("img/dashboard.png", "Dashboard"),
+        ("img/transaction.png", "Transaction"),
+        ("img/customer.png", "Customer"),
+        ("img/inventory.png", "Inventory"),
     ]
 
     for icon_path, label in menu_sidebar:
@@ -107,7 +114,7 @@ def create_sidebar(parent, on_select):
 
     Label(sidebar, bg="white").pack(expand=True, fill="both")
 
-    logout_icon = load_icon("assets/img/logout.png")
+    logout_icon = load_icon("img/logout.png")
     icon_images["Logout"] = logout_icon
 
     logout = Label(
@@ -158,11 +165,8 @@ def topbar(parent):
             print("Error updating notification status:", e)
 
     def update_notification_icon():
-        """Update the notification icon based on unread status"""
         has_unread = has_unread_notifications()
-        new_icon = create_notification_icon_with_dot(
-            "assets/img/notification.png", has_unread
-        )
+        new_icon = create_notification_icon_with_dot("img/notification.png", has_unread)
         icon_images["Notification"] = new_icon
         if "notif_btn_widget" in globals():
             notif_btn_widget.configure(image=new_icon)
@@ -171,7 +175,7 @@ def topbar(parent):
     topbar.pack(side="top", fill="x")
     topbar.pack_propagate(False)
 
-    prof_icon = load_icon("assets/img/profile.png")
+    prof_icon = load_icon("img/profile.png")
     icon_images["Profile"] = prof_icon
 
     profile_icon = Label(topbar, image=prof_icon, bg="#f5f5f5", cursor="hand2")
@@ -179,9 +183,7 @@ def topbar(parent):
     profile_icon.bind("<Button-1>", lambda e: load("Profile"))
 
     has_unread = has_unread_notifications()
-    notif_icon = create_notification_icon_with_dot(
-        "assets/img/notification.png", has_unread
-    )
+    notif_icon = create_notification_icon_with_dot("img/notification.png", has_unread)
     icon_images["Notification"] = notif_icon
 
     notif_btn_widget = Label(topbar, image=notif_icon, bg="#f5f5f5", cursor="hand2")

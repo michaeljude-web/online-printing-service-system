@@ -34,6 +34,9 @@ CREATE TABLE `admin` (
   `password` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+INSERT INTO `admin` (`id`, `email`, `password`) 
+VALUES (1, 'admin@gmail.com', 'admin123');
+
 -- --------------------------------------------------------
 
 --
@@ -81,9 +84,11 @@ CREATE TABLE `inventory` (
   `unit` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
---
--- Indexes for dumped tables
---
+INSERT INTO `inventory` (`inventory_id`, `item_name`, `quantity`, `unit`) VALUES
+(1, 'A4 Bond Paper', '499.00', 'sheets'),
+(2, 'Long Bond Paper', '400.00', 'sheets'),
+(3, 'Short Bond Paper', '300.00', 'sheets');
+
 
 --
 -- Indexes for table `admin`

@@ -1,10 +1,12 @@
+import sys, os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from tkinter import *
 from tkinter import ttk, filedialog, messagebox
-import os
-from db_connection import db_connection
+from database.db_connection import db_connection
 
 
-def open_transaction_popup(customer_id, callback=None):
+def transaction_open(customer_id, callback=None):
     popup = Toplevel()
     popup.title("Hera Online Printing - New Transaction")
     popup.geometry("500x500")
@@ -115,9 +117,9 @@ def open_transaction_popup(customer_id, callback=None):
 
     file_btn.grid(row=1, column=0, columnspan=2, pady=5)
 
-    Label(form_frame, text="Paper Size", font=label_font, bg="#faf9f6", anchor="w").grid(
-        row=2, column=0, sticky="w", pady=(10, 2)
-    )
+    Label(
+        form_frame, text="Paper Size", font=label_font, bg="#faf9f6", anchor="w"
+    ).grid(row=2, column=0, sticky="w", pady=(10, 2))
     size_combo = ttk.Combobox(
         form_frame,
         values=["A4 BOND PAPER", "SHORT BOND PAPER", "LONG BOND PAPER"],
@@ -135,9 +137,9 @@ def open_transaction_popup(customer_id, callback=None):
     copies_entry.grid(row=5, column=0, columnspan=2, pady=5)
     copies_entry.bind("<KeyRelease>", compute_total)
 
-    Label(form_frame, text="Color Type", font=label_font, bg="#faf9f6", anchor="w").grid(
-        row=6, column=0, sticky="w", pady=(10, 2)
-    )
+    Label(
+        form_frame, text="Color Type", font=label_font, bg="#faf9f6", anchor="w"
+    ).grid(row=6, column=0, sticky="w", pady=(10, 2))
     color_type = StringVar(value="bw")
     Radiobutton(
         form_frame,

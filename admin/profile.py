@@ -1,9 +1,18 @@
+import sys, os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from tkinter import *
 from tkinter import messagebox
-from db_connection import db_connection
+from database.db_connection import db_connection
 from PIL import Image, ImageTk
 
 current_admin_id = 1
+
+
+def asset(path):
+    return os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "assets", path)
+    )
 
 
 def profile(parent):
@@ -36,9 +45,12 @@ def profile(parent):
     container = Frame(parent, bg="white", bd=1, relief="solid", borderwidth=1)
     container.place(relx=0.5, rely=0.5, anchor="center", width=320, height=400)
 
-    profile_image = Image.open("assets/img/profile.png")
-    profile_image = profile_image.resize((60, 60))
-    profile_image_photo = ImageTk.PhotoImage(profile_image)
+    try:
+        profile_image = Image.open(asset("img/profile.png"))
+        profile_image = profile_image.resize((60, 60))
+        profile_image_photo = ImageTk.PhotoImage(profile_image)
+    except Exception as e:
+        profile_image_photo = None
 
     profile_image_label = Label(container, image=profile_image_photo, bg="white")
     profile_image_label.image = profile_image_photo
